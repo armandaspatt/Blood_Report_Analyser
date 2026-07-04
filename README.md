@@ -11,13 +11,13 @@ A rule-based pipeline that reads a blood test report PDF, extracts and standardi
 ## Screenshots
 
 **Upload & analyze a report**
-![App home screen](screenshots/app_home.png)
+![App home screen](app_home.png)
 
 **Extracted parameters & flagged abnormalities**
-![Extracted parameters and abnormalities](screenshots/extracted_parameters.png)
+![Extracted parameters and abnormalities](extracted_parameters.png)
 
 **Possible cross-parameter correlations**
-![Possible correlations](screenshots/possible_correlations.png)
+![Possible correlations](possible_correlations.png)
 
 ---
 
