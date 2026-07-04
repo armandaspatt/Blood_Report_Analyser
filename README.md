@@ -1,86 +1,88 @@
-#  Blood Report Analyzer
+# Blood Report ETL Pipeline
 
-A rule-based pipeline that reads a blood test report PDF, extracts and standardizes the values, flags abnormalities against reference ranges, and infers possible clinical correlations across multiple parameters — with a Streamlit web UI on top.
+A small **ETL (Extract → Transform → Load) pipeline** that turns unstructured PDF lab reports into clean, schema-validated, queryable data — plus a rule-based analytics layer on top and a Streamlit UI for interactive use.
 
 **Live demo:** [armandaspatt-blood-report-analyser-app-llmfpr.streamlit.app](https://armandaspatt-blood-report-analyser-app-llmfpr.streamlit.app/)
 Use `sample_report.pdf` from this repo to try it out quickly.
 
-> ⚠️ **This is an educational/portfolio project, not a medical diagnostic tool.** Correlation logic is based on general, publicly known clinical associations. Always consult a qualified healthcare professional.
+> ⚠️ **This is an educational/portfolio data engineering project, not a medical diagnostic tool.** The correlation rules are based on general, publicly known clinical associations for demonstration purposes only.
 
 ---
 
 ## Screenshots
 
-**Upload & analyze a report**
+**Ingestion — upload a raw PDF source file**
 ![App home screen](app_home.png)
 
-**Extracted parameters & flagged abnormalities**
+**Extract + Transform — standardized output with data quality flags**
 ![Extracted parameters and abnormalities](extracted_parameters.png)
 
-**Possible cross-parameter correlations**
+**Analytics layer — derived cross-field correlations**
 ![Possible correlations](possible_correlations.png)
 
 ---
 
-## How it works
+## Why this is a data engineering project
 
+Lab report PDFs are a classic messy real-world data source: no fixed schema, inconsistent field names across vendors ("SGPT" vs "ALT" vs "Alanine Aminotransferase"), inconsistent units, and text embedded in tables and free text. This project builds the pipeline pattern you'd use for any such source:
+
+| Stage | Concern | Where |
+|---|---|---|
+| **Extract** | Pull raw, unstructured data out of a semi-structured source (PDF) | `extractor.py` |
+| **Transform** | Schema mapping, deduplication of naming variants, type casting, unit normalization, validation against reference ranges | `standardizer.py` |
+| **Load / Serve** | Emit a standardized record (JSON) that downstream systems/dashboards can consume | `main.py`, `app.py` |
+| **Enrich** | A declarative, config-driven rules engine derives new fields (flags/correlations) from the standardized record — same pattern as a dbt-style transformation/business-rules layer | `rule_engine.py` |
+| **Config as data** | Schema (reference ranges + aliases) and business logic (correlation rules) live in versioned JSON, not code, so the pipeline can evolve without redeploying | `config/*.json` |
+
+## Pipeline architecture
+
+**Raw source file (PDF)**
+
+**↓ 1. EXTRACT** — `extractor.py`
+- `pdfplumber` pulls raw text + raw tables out of the PDF
+
+**↓ 2. TRANSFORM** — `standardizer.py`
+- alias resolution: raw label → canonical field name
+- regex parsing: value + unit extraction from text/tables
+- type casting: string → float
+- schema validation against `config/reference_ranges.json`
+
+→ produces `standardized_data`: `{ field_key: {value, unit, raw_label, status} }`
+
+**↓ 3. ENRICH / RULES** — `rule_engine.py`
+- abnormality flags: value vs. reference range
+- derived features: cross-field correlation rules (config-driven)
+
+**↓ 4. LOAD / SERVE** — `main.py` (CLI + JSON dump), `app.py` (Streamlit UI)
+
+**→ `last_analysis_output.json`** — machine-readable, ready for a DB/warehouse load
+
+## Data model
+
+Each parsed report is normalized into a flat record keyed by canonical field name:
+
+```json
+{
+  "glucose_fasting": {"value": 128.0, "unit": "mg/dL", "raw_label": "Fasting Glucose", "status": "HIGH"},
+  "hemoglobin":      {"value": 11.2,  "unit": "g/dL",  "raw_label": "Hemoglobin",       "status": "LOW"}
+}
 ```
-PDF report
-   │
-   ▼
-extractor.py         -> raw text + tables (pdfplumber)
-   │
-   ▼
-standardizer.py       -> maps lab-specific labels (e.g. "SGPT", "Hb", "FBS")
-   │                     to standardized parameter keys using an alias config
-   ▼
-rule_engine.py         -> flags abnormal values vs reference ranges,
-   │                      evaluates multi-parameter correlation rules
-   ▼
-main.py / app.py        -> CLI report or Streamlit UI + JSON output
-```
 
-## Features
+This is the "silver layer" shape — cleaned and typed, one row per parameter per report. It's intentionally flat and JSON-serializable so it can be:
+- loaded straight into a document store, or
+- flattened into a `(report_id, parameter, value, unit, status)` fact table for a relational warehouse.
 
-- **PDF extraction** – pulls raw text and tables out of digitally generated blood report PDFs
-- **Label standardization** – normalizes messy, lab-specific naming (e.g. "SGPT" → ALT) via a configurable alias list
-- **Abnormality detection** – compares every extracted value against reference ranges and flags HIGH/LOW
-- **Cross-parameter correlations** – applies declarative rules (config-driven, no code changes needed) to surface patterns like a possible metabolic/liver link, a diabetes pattern, or a thyroid–anemia link
-- **Two interfaces** – a CLI (`main.py`) for scripting and a Streamlit web app (`app.py`) for interactive use
-- **JSON output** – every run also writes a machine-readable `last_analysis_output.json`
+## Data quality handling
 
-## Project structure
+- **Schema drift across sources** — different labs label the same test differently. `config/reference_ranges.json` stores an alias list per canonical field; `standardizer.py` resolves raw labels to canonical keys (case-insensitive, punctuation-stripped, partial-match fallback).
+- **Validation** — every extracted value is checked against a defined reference range and tagged `HIGH` / `LOW` / normal, so downstream consumers never have to re-derive that logic.
+- **Unrecognized fields** — labels that don't match any known alias are dropped rather than silently mis-mapped, and the pipeline reports how many recognized parameters it found per document.
+- **Unsupported input** — the extractor currently assumes a text-based (digitally generated) PDF; scanned/image PDFs won't parse and would need an OCR pre-step (see below).
 
-```
-Blood_Report_Analyser/
-├── app.py                         # Streamlit web app
-├── main.py                        # CLI entry point / orchestrates the pipeline
-├── extractor.py                   # PDF -> raw text/tables
-├── standardizer.py                # raw data -> standardized parameters
-├── rule_engine.py                 # abnormality + correlation inference
-├── config/
-│   ├── reference_ranges.json      # normal ranges + label aliases per test
-│   └── correlation_rules.json     # multi-parameter correlation rules
-├── sample_report.pdf              # sample test report for demo
-└── requirements.txt
-```
+## Business logic as config, not code
 
-Output includes:
-- Standardized parameters extracted from the report
-- Individual abnormalities (high/low vs reference range)
-- Possible correlations across parameters (e.g. high glucose + high liver enzymes → possible metabolic/liver correlation)
+Correlation ("enrichment") rules are declarative JSON evaluated in a restricted namespace against the standardized record — the same idea as a rules/feature layer in a modern data stack (e.g. dbt macros or a feature store), kept out of the pipeline code so new logic ships as a config change:
 
-A `last_analysis_output.json` file is also written with the same data in machine-readable form.
-
-## How standardization handles messy labels
-
-Different labs name the same test differently (e.g. "SGPT", "ALT", "Alanine Aminotransferase" are all the same test). `reference_ranges.json` stores a list of known aliases per parameter, and `standardizer.py` matches extracted labels against these aliases (case-insensitive, punctuation-stripped, with a partial-match fallback).
-
-## How correlation rules work
-
-Each rule in `correlation_rules.json` is a small condition string using `high('param_key')` / `low('param_key')`, evaluated in a restricted namespace (no builtins) against the standardized data. This keeps rules declarative and easy to extend without touching the rule engine code — adding a new correlation is just adding a new JSON entry.
-
-Example:
 ```json
 {
   "id": "diabetes_liver_pattern",
@@ -90,13 +92,39 @@ Example:
 }
 ```
 
-## Current limitations / next steps
+## Project structure
 
-- Works reliably on text-based (digitally generated) PDFs. Scanned/image-based reports aren't yet supported — would need an OCR step (e.g. Tesseract) before the standardization stage.
-- Alias matching is rule-based; testing against a wider variety of real-world lab report formats would help harden the parsing logic.
-- Correlation rules currently cover a handful of well-known patterns (metabolic/liver, diabetes, lipid/cardiovascular, renal, thyroid/anemia, infection). More rules can be added purely via config, no code changes.
-- No persistence layer yet (e.g. SQLite) for tracking a patient's reports over time.
+```
+Blood_Report_Analyser/
+├── app.py                         # Streamlit UI (serve layer)
+├── main.py                        # CLI orchestrator, runs full ETL + writes JSON
+├── extractor.py                   # EXTRACT: PDF -> raw text/tables
+├── standardizer.py                # TRANSFORM: raw data -> standardized, validated records
+├── rule_engine.py                 # ENRICH: abnormality flags + correlation rules
+├── config/
+│   ├── reference_ranges.json      # schema: canonical fields, ranges, aliases
+│   └── correlation_rules.json     # business rules, config-driven
+├── sample_report.pdf              # sample raw source file for the demo
+└── requirements.txt
+```
+
+## Tech stack
+
+- **Extraction:** `pdfplumber`
+- **Transformation / validation:** Python, regex, config-driven schema (`config/reference_ranges.json`)
+- **Enrichment / rules:** small expression-based rule engine over a restricted `eval` namespace
+- **Serving:** Streamlit (`app.py`), CLI (`main.py`)
+- **Data interchange format:** JSON
+
+## Next steps for productionizing
+
+- **Orchestration** — wrap `main.py`'s pipeline call in an Airflow DAG / Prefect flow to batch-process a folder of incoming reports.
+- **Load step** — write `last_analysis_output.json` into a warehouse table (`report_id, parameter, value, unit, status, flag`) instead of a flat file.
+- **OCR support** — add a Tesseract-based pre-processing step for scanned PDFs so the pipeline can ingest a wider range of source formats.
+- **Schema registry** — move `reference_ranges.json` / `correlation_rules.json` into a versioned config store so rule changes are auditable.
+- **Testing** — add fixture PDFs covering different lab formats to regression-test the alias-matching logic as it's extended.
+- **Historical tracking** — persist standardized records per patient/report over time (e.g. SQLite/Postgres) to support trend analysis, not just single-report snapshots.
 
 ## Disclaimer
 
-All correlation logic is based on general, publicly known clinical associations for demonstration purposes. This tool does not use proprietary medical data and is not intended to diagnose, treat, or provide medical advice. Always consult a qualified healthcare professional.
+All correlation logic is based on general, publicly known clinical associations for demonstration purposes. This project does not use proprietary medical data and is not intended to diagnose, treat, or provide medical advice. Always consult a qualified healthcare professional.
