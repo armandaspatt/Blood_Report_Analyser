@@ -1,16 +1,4 @@
-"""
-rule_engine.py
-Two jobs:
-1. Flag individual abnormal values against reference ranges.
-2. Evaluate multi-parameter correlation rules (loaded from config) to
-   surface possible clinical patterns.
 
-NOTE: This is a rule-based educational/portfolio project, not a diagnostic
-tool. Correlation messages are deliberately phrased as "possible" /
-"can co-occur with" rather than definitive diagnoses, and are based on
-well-established, publicly known clinical associations (not proprietary
-medical data).
-"""
 
 import json
 

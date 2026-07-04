@@ -17,7 +17,7 @@ from rule_engine import load_correlation_rules, run_inference
 
 DISCLAIMER = (
     "DISCLAIMER: This tool provides rule-based pattern flagging for "
-    "educational/portfolio purposes only. It is NOT a medical diagnostic "
+    "educational purposes only. It is NOT a medical diagnostic "
     "tool and should never replace professional medical advice."
 )
 
@@ -72,6 +72,6 @@ if __name__ == "__main__":
     result = analyze(sys.argv[1])
     print_report(result["standardized_data"], result["inference"])
 
-    # also dump machine-readable JSON alongside the printed report
+
     with open("last_analysis_output.json", "w") as f:
         json.dump(result, f, indent=2)

@@ -1,10 +1,3 @@
-"""
-app.py
-Streamlit frontend for the Blood Report Analyzer pipeline.
-Upload a PDF -> see standardized parameters, abnormalities, and
-possible correlations rendered as a clean report.
-"""
-
 import streamlit as st
 import pandas as pd
 import tempfile
@@ -21,7 +14,6 @@ st.set_page_config(
     layout="centered"
 )
 
-# ---- minimal custom styling ----
 st.markdown("""
 <style>
     .main .block-container { padding-top: 2.5rem; max-width: 780px; }
@@ -33,6 +25,10 @@ st.markdown("""
         padding: 0.9rem 1.1rem;
         border-radius: 6px;
         margin-bottom: 0.7rem;
+        color: #1a1a1a !important;
+    }
+    .correlation-card strong {
+        color: #1a1a1a !important;
     }
     .disclaimer-box {
         background-color: #fff8e1;
@@ -40,7 +36,7 @@ st.markdown("""
         padding: 0.8rem 1.1rem;
         border-radius: 6px;
         font-size: 0.85rem;
-        color: #6b5900;
+        color: #6b5900 !important;
         margin-top: 1.5rem;
     }
 </style>
@@ -61,7 +57,7 @@ clinical associations. Always consult a qualified healthcare professional.
 
 if uploaded_file is not None:
     with st.spinner("Extracting and analyzing report..."):
-        # write uploaded file to a temp path so pdfplumber can read it
+
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
             tmp.write(uploaded_file.read())
             tmp_path = tmp.name
@@ -84,7 +80,7 @@ if uploaded_file is not None:
     else:
         st.success(f"Found {len(standardized_data)} recognized parameter(s).")
 
-        # ---- Standardized parameters table ----
+
         st.subheader("Extracted Parameters")
         rows = []
         abnormal_lookup = {a["parameter"]: a["status"] for a in inference["abnormalities"]}
@@ -101,12 +97,14 @@ if uploaded_file is not None:
         df = pd.DataFrame(rows)
 
         def highlight_status(row):
-            color = ""
+            style = "color: #1a1a1a"
             if row["Status"] == "HIGH":
-                color = "background-color: #fdecea"
+                style += "; background-color: #fdecea"
             elif row["Status"] == "LOW":
-                color = "background-color: #fef5e7"
-            return [color] * len(row)
+                style += "; background-color: #fef5e7"
+            else:
+                style += "; background-color: #eafaf1"
+            return [style] * len(row)
 
         st.dataframe(
             df.style.apply(highlight_status, axis=1),
