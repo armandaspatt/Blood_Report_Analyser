@@ -3,6 +3,7 @@
 A rule-based pipeline that reads a blood test report PDF, extracts and standardizes the values, flags abnormalities against reference ranges, and infers possible clinical correlations across multiple parameters — with a Streamlit web UI on top.
 
 **Live demo:** [armandaspatt-blood-report-analyser-app-llmfpr.streamlit.app](https://armandaspatt-blood-report-analyser-app-llmfpr.streamlit.app/)
+Use `sample_report.pdf` from this repo to try it out quickly.
 
 > ⚠️ **This is an educational/portfolio project, not a medical diagnostic tool.** Correlation logic is based on general, publicly known clinical associations. Always consult a qualified healthcare professional.
 
@@ -11,13 +12,13 @@ A rule-based pipeline that reads a blood test report PDF, extracts and standardi
 ## Screenshots
 
 **Upload & analyze a report**
-![App home screen](app_home.png)
+![App home screen](screenshots/app_home.png)
 
 **Extracted parameters & flagged abnormalities**
-![Extracted parameters and abnormalities](extracted_parameters.png)
+![Extracted parameters and abnormalities](screenshots/extracted_parameters.png)
 
 **Possible cross-parameter correlations**
-![Possible correlations](possible_correlations.png)
+![Possible correlations](screenshots/possible_correlations.png)
 
 ---
 
