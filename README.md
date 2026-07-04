@@ -64,28 +64,6 @@ Blood_Report_Analyser/
 └── requirements.txt
 ```
 
-## Getting started
-
-```bash
-git clone https://github.com/<your-username>/Blood_Report_Analyser.git
-cd Blood_Report_Analyser
-pip install -r requirements.txt
-```
-
-### Run the Streamlit app
-
-```bash
-streamlit run app.py
-```
-
-Then upload a blood report PDF (or use `sample_report.pdf`) in the browser.
-
-### Run from the command line
-
-```bash
-python main.py sample_report.pdf
-```
-
 Output includes:
 - Standardized parameters extracted from the report
 - Individual abnormalities (high/low vs reference range)
