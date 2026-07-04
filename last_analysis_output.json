@@ -1,0 +1,102 @@
+{
+  "standardized_data": {
+    "glucose_fasting": {
+      "value": 128.0,
+      "raw_label": "Fasting Glucose"
+    },
+    "hemoglobin": {
+      "value": 11.2,
+      "raw_label": "Hemoglobin"
+    },
+    "alt": {
+      "value": 65.0,
+      "raw_label": "SGPT (ALT)"
+    },
+    "ast": {
+      "value": 48.0,
+      "raw_label": "SGOT (AST)"
+    },
+    "tsh": {
+      "value": 5.1,
+      "raw_label": "TSH"
+    },
+    "total_cholesterol": {
+      "value": 210.0,
+      "raw_label": "Total Cholesterol"
+    },
+    "hba1c": {
+      "value": 6.8,
+      "raw_label": "HbA1c"
+    }
+  },
+  "inference": {
+    "abnormalities": [
+      {
+        "parameter": "glucose_fasting",
+        "value": 128.0,
+        "unit": "mg/dL",
+        "expected_range": "70-99 mg/dL",
+        "status": "high"
+      },
+      {
+        "parameter": "hemoglobin",
+        "value": 11.2,
+        "unit": "g/dL",
+        "expected_range": "12.0-16.5 g/dL",
+        "status": "low"
+      },
+      {
+        "parameter": "alt",
+        "value": 65.0,
+        "unit": "U/L",
+        "expected_range": "7-56 U/L",
+        "status": "high"
+      },
+      {
+        "parameter": "ast",
+        "value": 48.0,
+        "unit": "U/L",
+        "expected_range": "10-40 U/L",
+        "status": "high"
+      },
+      {
+        "parameter": "tsh",
+        "value": 5.1,
+        "unit": "uIU/mL",
+        "expected_range": "0.4-4.0 uIU/mL",
+        "status": "high"
+      },
+      {
+        "parameter": "total_cholesterol",
+        "value": 210.0,
+        "unit": "mg/dL",
+        "expected_range": "0-200 mg/dL",
+        "status": "high"
+      },
+      {
+        "parameter": "hba1c",
+        "value": 6.8,
+        "unit": "%",
+        "expected_range": "4.0-5.6 %",
+        "status": "high"
+      }
+    ],
+    "correlations": [
+      {
+        "rule_id": "diabetes_liver_pattern",
+        "flag": "possible_metabolic_liver_correlation",
+        "message": "Elevated fasting glucose together with elevated liver enzymes (ALT/AST) can co-occur with non-alcoholic fatty liver disease (NAFLD), which is commonly associated with insulin resistance and type 2 diabetes risk."
+      },
+      {
+        "rule_id": "diabetes_indicator",
+        "flag": "possible_diabetes_pattern",
+        "message": "Elevated fasting glucose combined with elevated HbA1c suggests sustained high blood sugar levels, consistent with a diabetes or pre-diabetes pattern."
+      },
+      {
+        "rule_id": "hypothyroid_pattern",
+        "flag": "possible_thyroid_anemia_link",
+        "message": "Elevated TSH with low hemoglobin can co-occur, as hypothyroidism is a recognized contributor to anemia."
+      }
+    ]
+  }
+}

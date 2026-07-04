@@ -1,0 +1,38 @@
+[
+  {
+    "id": "diabetes_liver_pattern",
+    "condition": "high('glucose_fasting') and (high('alt') or high('ast'))",
+    "message": "Elevated fasting glucose together with elevated liver enzymes (ALT/AST) can co-occur with non-alcoholic fatty liver disease (NAFLD), which is commonly associated with insulin resistance and type 2 diabetes risk.",
+    "flag": "possible_metabolic_liver_correlation"
+  },
+  {
+    "id": "diabetes_indicator",
+    "condition": "high('glucose_fasting') and high('hba1c')",
+    "message": "Elevated fasting glucose combined with elevated HbA1c suggests sustained high blood sugar levels, consistent with a diabetes or pre-diabetes pattern.",
+    "flag": "possible_diabetes_pattern"
+  },
+  {
+    "id": "dyslipidemia_cardio_risk",
+    "condition": "high('ldl') and (high('total_cholesterol') or high('triglycerides')) and low('hdl')",
+    "message": "High LDL and triglycerides alongside low HDL indicate a dyslipidemia pattern, a recognized risk factor for cardiovascular disease.",
+    "flag": "possible_cardiovascular_risk"
+  },
+  {
+    "id": "renal_function_concern",
+    "condition": "high('creatinine') and high('urea')",
+    "message": "Elevated creatinine and urea together suggest reduced kidney filtration efficiency and may warrant renal function follow-up.",
+    "flag": "possible_renal_concern"
+  },
+  {
+    "id": "hypothyroid_pattern",
+    "condition": "high('tsh') and low('hemoglobin')",
+    "message": "Elevated TSH with low hemoglobin can co-occur, as hypothyroidism is a recognized contributor to anemia.",
+    "flag": "possible_thyroid_anemia_link"
+  },
+  {
+    "id": "infection_pattern",
+    "condition": "high('wbc') and low('platelets')",
+    "message": "Elevated white blood cell count with low platelet count can be seen in certain infections and warrants clinical correlation.",
+    "flag": "possible_infection_pattern"
+  }
+]
