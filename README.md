@@ -82,6 +82,18 @@ Example:
 
 ## Current limitations / next steps
 
+This project is intentionally scoped around the document-processing side —
+PDF scraping, data extraction, cleaning/standardization, and a declarative
+rules engine — rather than around pipeline orchestration. It's a single-
+document, on-demand pipeline (like a request handler), not a scheduled batch
+job, so something like an Airflow DAG isn't a natural fit here; that kind of
+orchestration made more sense for a separate, dedicated data-engineering
+project (`aqi-pipeline` — ingestion → warehouse → dbt → Airflow → dashboard)
+that now covers that ground. If this project ever needed
+to process a folder of reports on a schedule rather than one PDF per run,
+that would be the trigger to revisit orchestration — but it isn't there yet.
+
+Remaining gaps worth closing:
 - Works reliably on text-based (digitally generated) PDFs. Scanned/image-based
   reports are not yet supported — would need an OCR step (e.g. Tesseract)
   before the standardization stage.
@@ -92,6 +104,14 @@ Example:
   infection). More rules can be added purely via config, no code changes.
 - No persistence layer yet (e.g. SQLite) for tracking a patient's reports
   over time.
+
+An ML angle to explore going forward:
+- Swap/augment the hand-written alias matching with a trained
+  extraction/classification model (e.g. a lightweight NER or table-structure
+  model) so parsing generalizes to lab formats that weren't hand-coded.
+- Learn correlation/risk patterns from labeled data instead of only
+  hand-authored rule conditions, with the rule engine kept as an
+  interpretable baseline/fallback.
 
 ## Disclaimer
 
